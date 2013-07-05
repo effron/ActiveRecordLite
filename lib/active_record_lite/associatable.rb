@@ -19,7 +19,6 @@ class BelongsToAssocParams < AssocParams
     @other_class_name = params[:class_name] || name.to_s.camelize
     @primary_key = params[:primary_key] || "id"
     @foreign_key = params[:foreign_key] || "#{name}_id"
-    @name = name
   end
 
   def type
