@@ -5,6 +5,10 @@ require_relative './searchable'
 require 'active_support/inflector'
 
 class SQLObject < MassObject
+
+  extend Searchable
+  extend Associatable
+
   def self.set_table_name(table_name)
     @table_name = table_name.underscore
   end
@@ -18,10 +22,8 @@ class SQLObject < MassObject
       SELECT *
         FROM #{table_name}
     SQL
-    row_array = DBConnection.execute(query)
-    row_array.map do |row|
-      self.new(row)
-    end
+    results = DBConnection.execute(query)
+    self.parse_all(results)
   end
 
   def self.find(id)
@@ -31,8 +33,8 @@ class SQLObject < MassObject
        WHERE id = ?
     SQL
 
-    row = DBConnection.execute(query, id)[0]
-    self.new(row)
+    results = DBConnection.execute(query, id)
+    self.parse_all(results)[0]
   end
 
   def save
@@ -45,12 +47,15 @@ class SQLObject < MassObject
     self.instance_variables.map { |iv| instance_variable_get(iv) }
   end
 
-  def create
-    attr_names = self.instance_variables.map { |iv| iv.to_s[1..-1] }.join(", ")
-    q_marks = (['?'] * self.instance_variables.length).join(", ")
+  def attr_names
+    self.instance_variables.map{ |iv| iv.to_s[1..-1] }
+  end
 
+  def create
+    q_marks = (['?'] * self.instance_variables.length).join(", ")
+    names = attr_names.join(", ")
     query = <<-SQL
-      INSERT INTO #{self.class.table_name} (#{attr_names}) VALUES (#{q_marks})
+      INSERT INTO #{self.class.table_name} (#{names}) VALUES (#{q_marks})
     SQL
 
     DBConnection.execute(query, *attribute_values)
@@ -58,7 +63,6 @@ class SQLObject < MassObject
   end
 
   def update
-    attr_names = self.instance_variables.map{ |iv| iv.to_s[1..-1] }
     set_string = attr_names.join(" = ?,") + "= ?"
 
     query = <<-SQL
