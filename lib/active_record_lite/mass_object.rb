@@ -19,7 +19,7 @@ class MassObject
   def initialize(params = {})
     params.each do |key, value|
       if self.class.attributes.include?(key.to_sym)
-        instance_variable_set("@#{key}", value)
+        self.send("#{key}=", value)
       else
         raise "mass assignment to unregistered attribute #{key}"
       end
