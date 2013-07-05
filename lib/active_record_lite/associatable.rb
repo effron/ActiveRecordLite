@@ -20,9 +20,11 @@ class BelongsToAssocParams < AssocParams
     @other_class_name = params[:class_name] || name.to_s.camelize
     @primary_key = params[:primary_key] || "id"
     @foreign_key = params[:foreign_key] || "#{name}_id"
+    @name = name
   end
 
   def type
+    @name.to_s.camelize.constantize
   end
 end
 
@@ -88,7 +90,7 @@ module Associatable
 
     define_method(name) do
       aps1 = self.class.assoc_params[assoc1]
-      aps2 = assoc1.to_s.camelize.constantize.assoc_params[assoc2]
+      aps2 = aps1.other_class.assoc_params[assoc2]
       query = <<-SQL
         SELECT #{aps2.other_table}.*
           FROM #{aps2.other_table}
@@ -100,7 +102,7 @@ module Associatable
       SQL
 
       results = DBConnection.execute(query)
-      aps2.other_class.parse_all(results).first
+      aps2.type.parse_all(results).first
     end
   end
 end
