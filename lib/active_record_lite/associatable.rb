@@ -3,11 +3,11 @@ require 'active_support/inflector'
 require_relative './db_connection.rb'
 
 class AssocParams
-  def other_class
+  def other_table
     other_class.table_name
   end
 
-  def other_table
+  def other_class
     @other_class_name.constantize
   end
 end
@@ -22,14 +22,6 @@ class BelongsToAssocParams < AssocParams
     @foreign_key = params[:foreign_key] || "#{name}_id"
   end
 
-  def other_table
-    other_class.table_name
-  end
-
-  def other_class
-    @other_class_name.constantize
-  end
-
   def type
   end
 end
@@ -42,14 +34,6 @@ class HasManyAssocParams < AssocParams
     @other_class_name = params[:class_name] || name.to_s.singularize.camelize
     @primary_key = params[:primary_key] || "id"
     @foreign_key = params[:foreign_key] || "#{self_class.to_s.underscore}_id"
-  end
-
-  def other_table
-    other_class.table_name
-  end
-
-  def other_class
-    @other_class_name.constantize
   end
 
   def type
