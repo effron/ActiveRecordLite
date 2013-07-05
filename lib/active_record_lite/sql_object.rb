@@ -10,11 +10,11 @@ class SQLObject < MassObject
   extend Associatable
 
   def self.set_table_name(table_name)
-    @table_name = table_name.underscore
+    @table_name = table_name
   end
 
   def self.table_name
-    @table_name
+    @table_name || self.name.underscore
   end
 
   def self.all
@@ -34,7 +34,7 @@ class SQLObject < MassObject
     SQL
 
     results = DBConnection.execute(query, id)
-    self.parse_all(results)[0]
+    self.parse_all(results).first
   end
 
   def save
@@ -66,7 +66,9 @@ class SQLObject < MassObject
     set_string = attr_names.join(" = ?,") + "= ?"
 
     query = <<-SQL
-    UPDATE #{self.class.table_name} SET #{set_string} WHERE id = #{id}
+      UPDATE #{self.class.table_name}
+         SET #{set_string}
+       WHERE id = #{id}
     SQL
 
     DBConnection.execute(query, *attribute_values)
